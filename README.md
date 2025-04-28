@@ -1,4 +1,4 @@
-# Discord Direct Message Bot
+# Discord Direct Message Bot V2
 
 This project is a **Discord bot** designed to send direct messages (DMs) to all members of a selected server. The bot is built using the [Discord.js](https://discord.js.org/) library and provides an easy-to-use console interface for managing servers, selecting recipients, and sending messages.
 
@@ -25,91 +25,103 @@ Failure to follow these guidelines could result in your account or bot being res
 
 ## Prerequisites
 
-Before you can use this bot, ensure you have the following:
+Before starting, make sure you have the following installed on your machine:
 
-1. **Node.js**: Download and install [Node.js](https://nodejs.org/).
-2. **Discord Bot Token**: Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get its token.
-3. **Required Permissions**: Add the bot to a server with the following permissions:
-   - `Read Messages`
-   - `Send Messages`
-   - `Manage Messages` (optional, if you need advanced management)
+1. **Node.js** (version 16 or higher recommended).
+2. **npm** (included with Node.js).
+3. A **Discord bot token**. Refer to the [Discord documentation](https://discord.com/developers/docs/intro) to create an application and obtain a token.
 
 ## Installation
 
 1. Clone this repository to your local machine:
    ```bash
-   git clone https://github.com/sayonaratv/discordjs-dmall-consol.git
-   cd discordjs-dmall-consol
+   git clone https://github.com/sayonaratv/dmall-bot-console.git
+   cd dmall-bot-consoleV2
    ```
 
-2. Install dependencies:
+2. Install the necessary dependencies:
    ```bash
    npm install
    ```
 
+3. Install a compatible version of `chalk` (4.1.2 for CommonJS):
+   ```bash
+   npm install chalk@4.1.2
+   ```
+
 ## Usage
 
-1. Start the bot:
+1. Start the bot with the following command:
    ```bash
    node index.js
    ```
 
-2. When prompted, enter your bot token.
+2. Enter your Discord bot token when prompted.
 
-3. Select a server from the list displayed in the console.
+3. Follow the instructions in the console to:
+   - Select a server from the list of servers the bot has access to.
+   - Choose the order of sending (e.g., from newest to oldest members).
+   - Provide the message to send to the selected members.
 
-4. View the server's details (name, total users, bots, and online members).
-
-5. Enter the message you wish to send to all members.
-
-6. The bot will attempt to DM all members (excluding bots) and display a summary of the results.
-
-7. After completing the process:
-   - You can select another server.
-   - Change the bot token by entering `C`.
-   - Exit the application by entering `X`.
+4. Check the logs in the console to view the results:
+   - Successful messages will appear in green with the text `SUCCESS`.
+   - Failed messages will appear in red with the text `FAILED`.
+   - A summary will be displayed in blue at the end of the operation.
 
 ## Example Output
 
+Here is an example of what the console output might look like while the bot is running:
+
 ```
-Available Servers:
-1. Server: MyServer, Owner: Owner#1234, Can DM All: yes, Members: 100
-2. Server: AnotherServer, Owner: Admin#5678, Can DM All: no, Members: 50
-C. Change Token
-X. Exit
+AVAILABLE SERVERS:
+1 | SERVER: My Discord Server, OWNER: User#1234, MEMBERS: 150
+C | OPTION: Change Token
+X | OPTION: Exit
 
 Enter the number of the server, C to change token, or X to exit: 1
 
-Server Selected: MyServer
-- Total Users (non-bots): 80
-- Total Bots: 20
-- Total Online Members: 50
-- Total Members: 100
+Server Selected: My Discord Server
+Total Users (non-bots): 120
+Total Bots: 30
+Total Online Members: 45
+Total Members: 150
 
-What is the message to send to all members in MyServer? Hello everyone! This is a test message.
+ORDER OF DMs:
+1 | From the newest members to the oldest
+2 | From the oldest members to the newest
+3 | Online members only
+4 | Offline members only
 
-DM sent to User#1234: SUCCESS
-DM sent to User#5678: FAILED
-...
+In what order do you want to send (1-4): 1
+
+What is the message to send to selected members in My Discord Server? Hello, this is a test DM!
+
+DM sent to User#5678: SUCCESS
+DM sent to User#9101: SUCCESS
+DM to User#1123: FAILED
 
 Summary:
-- Total members: 100
-- Members who received the message: 78
+- Total selected members: 150
+- Members who received the message: 148
 - Members who didn't receive the message: 2
-- Ratio: 78/100 members received the message
-
-Returning to server list...
+- Ratio: 148/150 members received the message
 ```
+
+## Customization
+
+The bot's features can be adjusted by modifying the `index.js` file. For example:
+- Add new filters for members.
+- Customize the messages displayed in the console.
 
 ## Known Limitations
 
-- The bot cannot DM members who have disabled DMs from server members.
-- Discord imposes rate limits for sending messages. If the bot hits these limits, some messages may fail.
+- **Rate Limits**: Discord enforces limits on the number of messages that can be sent within a certain period. If you exceed these limits, some DM attempts may fail.
+- **Permissions**: Ensure that the bot has the necessary permissions to read members and send direct messages.
 
-## Contributing
+## Contribution
 
-Contributions are welcome! If you'd like to add new features or fix bugs, feel free to fork the repository and submit a pull request.
+Contributions are welcome! If you'd like to improve this project, feel free to open an [issue](https://github.com/sayonaratv/dmall-bot-console/issues) or a [pull request](https://github.com/sayonaratv/dmall-bot-console/pulls).
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
