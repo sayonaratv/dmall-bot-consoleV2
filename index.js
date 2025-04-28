@@ -1,5 +1,6 @@
-const { Client, GatewayIntentBits, ActivityType } = require("discord.js");
+const { Client, GatewayIntentBits } = require("discord.js");
 const readline = require("readline");
+const chalk = require("chalk"); // Compatible with chalk version 4.1.2 IMPORTANT FOR THIS VERSION !!
 
 // Function to create a new readline interface
 const createReadlineInterface = () => {
@@ -24,24 +25,20 @@ const promptServerAndSendDMs = async () => {
   let guildList = [];
   let index = 1;
 
-  console.log("\nAvailable Servers:");
+  console.log(chalk.blue("\nAVAILABLE SERVERS:"));
   for (const [guildId, guild] of guilds) {
     try {
       const owner = await guild.fetchOwner();
       const members = await guild.members.fetch();
-      const canDMAll = guild.members.me.permissions.has("ADMINISTRATOR")
-        ? "yes"
-        : "no";
       guildList.push({
         index,
         id: guildId,
         name: guild.name,
         owner: owner.user.tag,
-        canDMAll,
         memberCount: members.size,
       });
       console.log(
-        `${index} | Server: ${guild.name}, Owner: ${owner.user.tag}, Can DM All: ${canDMAll}, Members: ${members.size}`
+        `${index} | Server: ${guild.name}, Owner: ${owner.user.tag}, Members: ${members.size}`
       );
       index++;
     } catch (error) {
@@ -72,59 +69,104 @@ const promptServerAndSendDMs = async () => {
   const chosenGuild = guildList.find((g) => g.index === parseInt(chosenOption));
 
   if (!chosenGuild) {
-    console.log("Invalid option chosen. Returning to server list.\n");
+    console.log(
+      chalk.red("Invalid option chosen. Returning to server list.\n")
+    );
     rl.close();
     return promptServerAndSendDMs();
   }
 
-  console.log(); // Adding an extra line for spacing
-
   const guild = guilds.get(chosenGuild.id);
   const members = await guild.members.fetch();
 
+  // Calculate detailed server information
   const totalMembers = members.size;
   const totalBots = members.filter((member) => member.user.bot).size;
   const totalUsers = totalMembers - totalBots;
-  const totalOnline = members.filter(
-    (member) => member.presence?.status === "online"
+  const totalOnline = members.filter((member) =>
+    ["online", "idle", "dnd"].includes(member.presence?.status)
   ).size;
 
-  console.log(`\nServer Selected: ${guild.name}`);
-  console.log(`- Total Users (non-bots): ${totalUsers}`);
-  console.log(`- Total Bots: ${totalBots}`);
-  console.log(`- Total Online Members: ${totalOnline}`);
-  console.log(`- Total Members: ${totalMembers}`);
+  // Log detailed server information
+  console.log(chalk.green(`\nServer Selected: ${guild.name}`));
+  console.log(`Total Users (non-bots): ${totalUsers}`);
+  console.log(`Total Bots: ${totalBots}`);
+  console.log(`Total Online Members: ${totalOnline}`);
+  console.log(`Total Members: ${totalMembers}`);
+
+  const orderOption = await promptInput(
+    rl,
+    chalk.blue(`\nORDER OF DMs:\n`) +
+      `1 | Option: From the newest members to the oldest\n` +
+      `2 | Option: From the oldest members to the newest\n` +
+      `3 | Option: Online members only\n` +
+      `4 | Option: Offline members only\n` +
+      `In what order do you want to send (1-4): `
+  );
+
+  let filteredMembers;
+  switch (orderOption) {
+    case "1": // Newest to oldest
+      filteredMembers = members.sort(
+        (a, b) => b.joinedTimestamp - a.joinedTimestamp
+      );
+      break;
+    case "2": // Oldest to newest
+      filteredMembers = members.sort(
+        (a, b) => a.joinedTimestamp - b.joinedTimestamp
+      );
+      break;
+    case "3": // Online members only (online, idle, dnd)
+      filteredMembers = members.filter((member) =>
+        ["online", "idle", "dnd"].includes(member.presence?.status)
+      );
+      break;
+    case "4": // Offline members only
+      filteredMembers = members.filter(
+        (member) => member.presence?.status === "offline" || !member.presence
+      );
+      break;
+    default:
+      console.log("Invalid option. Returning to server list.\n");
+      rl.close();
+      return promptServerAndSendDMs();
+  }
 
   dmMessage = await promptInput(
     rl,
-    `\nWhat is the message to send to all members ? `
+    `\nWhat is the message to send to selected members in ${guild.name}? `
   );
   rl.close();
 
-  console.log(); // Adding an extra line for spacing
+  console.log();
 
   let successCount = 0;
   let failureCount = 0;
 
-  for (const member of members.values()) {
+  for (const member of filteredMembers.values()) {
     if (!member.user.bot) {
       try {
         await member.send(dmMessage);
-        console.log(`DM sent to ${member.user.tag}: SUCCESS`);
+        console.log(`DM sent to ${member.user.tag}: ${chalk.green("SUCCESS")}`);
         successCount++;
       } catch (err) {
-        console.log(`DM to ${member.user.tag} FAILED: ${err.message}`);
+        console.log(`DM to ${member.user.tag}: ${chalk.red("FAILED")}`);
         failureCount++;
       }
     }
   }
 
-  console.log(`\nSummary:`);
-  console.log(`- Total members: ${totalMembers}`);
-  console.log(`- Members who received the message: ${successCount}`);
-  console.log(`- Members who didn't receive the message: ${failureCount}`);
+  console.log();
+
+  console.log(chalk.blue(`Total selected members: ${filteredMembers.size}`));
+  console.log(chalk.blue(`Members who received the message: ${successCount}`));
   console.log(
-    `- Ratio: ${successCount}/${totalMembers} members received the message\n`
+    chalk.blue(`Members who didn't receive the message: ${failureCount}`)
+  );
+  console.log(
+    chalk.blue(
+      `Ratio: ${successCount}/${filteredMembers.size} members received the message\n`
+    )
   );
 
   console.log("Returning to server list...\n");
@@ -146,7 +188,11 @@ const startBot = async () => {
   });
 
   client.once("ready", async () => {
-    console.log("Note: Bot is online!\n");
+    console.log(
+      chalk.green(
+        "\nNote: Bot is online! (Originally made by sayonaratv on GitHub)\n"
+      )
+    );
     await promptServerAndSendDMs(); // Start the DM process
   });
 
